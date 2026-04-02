@@ -1,3 +1,5 @@
+![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen)
+
 # Claude Certified Architect – Foundations: Exam Prep Guide
 
 ## About This Guide

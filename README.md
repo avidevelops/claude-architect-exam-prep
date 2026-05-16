@@ -945,3 +945,5 @@ Based on these reflections and the patterns in the exam, keep these tactical str
 2. **Beware of over-spawning.** If a coordinator already holds the context, spawning a subagent is wrong. Subagents are for fresh exploration, not re-processing existing data.
 3. **Machine Identifiers rule.** If an agent needs to perform an action on a specific item (a document, a game, a user), the correct architecture always uses an explicit ID (`game_id`, `citation_id`), never an ambiguous text string.
 4. **Assume self-reported metadata is untrusted.** Especially for MCP servers, `readOnly` flags are just suggestions. Base security bypasses on system-level trust, not tool annotations.
+
+Need these questions in a flash card or quiz view? Try [https://ericspencer.us/Claude-architect-quiz/](https://ericspencer.us/Claude-architect-quiz/)

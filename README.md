@@ -88,18 +88,26 @@ Your system processes asynchronous user requests with a strict Service Level Agr
 - C) Use the synchronous API instead to guarantee the SLA.  
 - D) Submit batches every 4 hours.  
 
-**✅ Correct Answer: D — Submit batches every 4 hours**
+**✅ Correct Answer: A — Submit batches every 6 hours**
 
 **Why this is correct:**  
-Worst-case total turnaround time is the time a document waits for the next batch window *plus* the maximum batch processing time (24 hours). If you submit every 4 hours, a document arriving right after a cutoff waits 4 hours + 24 hours processing = 28 hours. This leaves a 2-hour safety buffer under the 30-hour SLA.
+The question asks for the schedule that meets the SLA **while maximizing cost efficiency**. The math is deterministic:
+- A request waits at most one batch interval before submission
+- Worst-case total time = batch interval + 24h max processing time
+- To satisfy the 30h SLA: interval + 24h ≤ 30h → interval ≤ 6h
+
+Submitting every 6 hours is the **longest interval that still guarantees SLA compliance**, meaning the fewest batch submissions, lowest orchestration overhead, and greatest cost efficiency. It sits precisely on the optimal boundary.
 
 **Why the others are weaker:**  
-- **A)** 6 hours wait + 24 hours processing = exactly 30 hours. This leaves zero buffer, risking SLA breaches.  
-- **B)** End-of-day (24h) wait + 24h processing = 48 hours, failing the SLA entirely.  
+- **B)** 24h wait + 24h processing = 48 hours, failing the SLA entirely.  
 - **C)** Unnecessarily sacrifices the Batch API's 50% cost discount.  
+- **D)** 4h wait + 24h = 28h. Meets the SLA, but submits more batches than necessary, incurring extra orchestration cost with no SLA benefit.
+
+**⚠️ Real-World Note:**  
+Option D (every 4 hours) is the **operationally safer** production choice — the 2-hour buffer absorbs retries, partial batch failures, and unexpected delays, preventing SLA breaches. In production system design, never run right on an SLA boundary. However, since the question explicitly asks for **maximum cost efficiency**, A is the exam-correct answer.
 
 **💡 Exam Takeaway:**  
-Calculate worst-case SLA by adding batch frequency interval to the 24-hour max processing time; always leave an operational buffer.
+Calculate worst-case turnaround by adding batch interval to the 24h max processing time. The most cost-efficient schedule is the *longest interval* that still satisfies the SLA — not just any interval that fits.
 
 ---
 

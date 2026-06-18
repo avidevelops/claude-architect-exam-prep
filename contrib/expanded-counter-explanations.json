@@ -1,0 +1,467 @@
+{
+  "_about": "Expanded, machine-readable per-option counter-explanations for the questions in this repository's README. Contributed back under CC BY 4.0 reciprocity (see Issue #2). Each entry is keyed to the README question number (Q1..Q33). The original prose lives in the README; this file restructures the per-option reasoning into letter-keyed fields so downstream quiz/flash-card tools can render each distractor's counter-explanation programmatically.",
+  "source": {
+    "original_author": "avidevelops",
+    "original_repo": "https://github.com/avidevelops/claude-architect-exam-prep",
+    "license": "CC BY 4.0",
+    "attribution_line": "Source: avidevelops, https://github.com/avidevelops/claude-architect-exam-prep, CC BY 4.0"
+  },
+  "enrichment": {
+    "by": "MSApps Mobile × OpsAgents",
+    "contact": "michal@opsagents.agency",
+    "description": "Per-option counter-explanations normalized from the README's 'Why the others are weaker' prose into letter-keyed JSON. License preserved: CC BY 4.0. Indicates changes were made (restructured into machine-readable form).",
+    "note": "Question Q29 (Temporal Differences vs. Data Contradictions) is omitted: it has no enumerated answer options in the source, so no per-option mapping applies."
+  },
+  "license": "CC BY 4.0",
+  "generated_at": "2026-06-18",
+  "questions": [
+    {
+      "question_id": "Q1",
+      "title": "Handling Semantic Errors in Extraction Totals",
+      "domain": "D4",
+      "scenario": "Schema Design & Self-Correction",
+      "correct_option": "A",
+      "why_correct": "JSON schemas prevent syntax errors but not semantic errors (like bad math). The most robust self-correction pattern is extracting both what the document explicitly states (`stated_total`) and what the model calculates from the line items (`calculated_total`). If they don't match, the record is flagged for human review. This improves reliability without fabricating data.",
+      "per_option_counter_explanations": {
+        "B": "Adjusting line items invents values not supported by the document, corrupting data integrity.",
+        "C": "Adds unnecessary architectural overhead when explicit deterministic validation is available.",
+        "D": "Few-shot examples cannot guarantee deterministic consistency for arithmetic."
+      },
+      "exam_takeaway": "Design self-correction flows by extracting both a stated value and a calculated value, routing mismatches to human review rather than silently \"fixing\" source document errors. ---"
+    },
+    {
+      "question_id": "Q2",
+      "title": "Scaling Prompt Refinement vs. Batch Processing",
+      "domain": "D4",
+      "scenario": "Batch Processing & Cost Optimization",
+      "correct_option": "A",
+      "why_correct": "The guide explicitly recommends refining prompts on a representative sample *before* batch-processing large volumes. Iterative resubmissions at scale destroy the cost savings of the Batch API. By fixing the failure modes on a localized sample, you ensure the prompt is robust, maximizing first-pass success when you finally trigger the 50,000-document Batch run.",
+      "per_option_counter_explanations": {
+        "B": "Paying for prompt learning on production-sized batches results in massive, expensive resubmission cycles.",
+        "C": "Synchronous API throws away the 50% cost savings of the Batch API.",
+        "D": "Still pays for iterative failure learning at a high scale."
+      },
+      "exam_takeaway": "Refine prompts on a representative sample first to maximize first-pass success, then run the full volume through the Batch API to minimize expensive resubmissions. ---"
+    },
+    {
+      "question_id": "Q3",
+      "title": "Batch API Scheduling for SLAs",
+      "domain": "D5",
+      "scenario": "SLA Management & Async APIs",
+      "correct_option": "D",
+      "why_correct": "Worst-case total turnaround time is the time a document waits for the next batch window *plus* the maximum batch processing time (24 hours). If you submit every 4 hours, a document arriving right after a cutoff waits 4 hours + 24 hours processing = 28 hours. This leaves a 2-hour safety buffer under the 30-hour SLA.",
+      "per_option_counter_explanations": {
+        "A": "6 hours wait + 24 hours processing = exactly 30 hours. This leaves zero buffer, risking SLA breaches.",
+        "B": "End-of-day (24h) wait + 24h processing = 48 hours, failing the SLA entirely.",
+        "C": "Unnecessarily sacrifices the Batch API's 50% cost discount."
+      },
+      "exam_takeaway": "Calculate worst-case SLA by adding batch frequency interval to the 24-hour max processing time; always leave an operational buffer. ---"
+    },
+    {
+      "question_id": "Q4",
+      "title": "Schema Design for Conflicting Source Truths",
+      "domain": "D4",
+      "scenario": "Schema Engineering & Provenance",
+      "correct_option": "D",
+      "why_correct": "Forcing premature collapse into a single value is an anti-pattern. If the specs table is only right 90% of the time, hard-coding a preference guarantees a 10% error rate. Modifying the schema to accept an array of values with explicit source locations preserves full provenance, allowing downstream business logic or human reviewers to make an informed reconciliation.",
+      "per_option_counter_explanations": {
+        "A": "Impractical for automated pipelines operating on legacy documents.",
+        "B": "A single-value schema forces the LLM to destroy evidence of the conflict.",
+        "C": "A heuristic rule is brittle and will output wrong data 10% of the time."
+      },
+      "exam_takeaway": "Preserve conflicting source data in the structured output instead of forcing premature collapse into a single value. ---"
+    },
+    {
+      "question_id": "Q5",
+      "title": "Output Formats for Tool Chaining",
+      "domain": "D2",
+      "scenario": "Tool Interfaces & Identifiers",
+      "correct_option": "B",
+      "why_correct": "Multi-step workflows require clear input/output contracts. Because the downstream tools (`share`, `move`) require a specific machine-usable identifier (`document_id`), the upstream `search` tool must return exactly that ID in a structured format alongside the human-readable metadata.",
+      "per_option_counter_explanations": {
+        "A": "Clickable URLs are for humans. The agent would have to infer or parse IDs from the string.",
+        "C": "Prose summaries do not provide the exact programmatic identifiers needed for the next API call.",
+        "D": "Titles are ambiguous and cannot be passed directly into an ID-based API."
+      },
+      "exam_takeaway": "Multi-step tool workflows require machine-usable identifiers; tools meant for chaining should always return structured data containing explicit IDs. ---"
+    },
+    {
+      "question_id": "Q6",
+      "title": "The Primary Advantage of Structured Output",
+      "domain": "D1",
+      "scenario": "Agentic Tool Integration",
+      "correct_option": "D",
+      "why_correct": "Structured outputs provide a stable schema contract. Instead of using regex or fuzzy text parsing to extract an account number or currency amount from a verbose prose response, downstream systems (and subsequent agent tools) can directly reference the exact JSON keys. This drastically reduces integration errors in chained operations.",
+      "per_option_counter_explanations": {
+        "A": "JSON enforces the *shape*, but LLM reasoning remains fundamentally probabilistic.",
+        "B": "Schema checks validate format, not semantic correctness (truth).",
+        "C": "JSON often *increases* token overhead due to bracket/key repetition."
+      },
+      "exam_takeaway": "Structured output gives agents reliable field access, preventing downstream errors associated with parsing free-form text. ---"
+    },
+    {
+      "question_id": "Q7",
+      "title": "Dynamic Scoping to Solve Tool Selection Overload",
+      "domain": "D2",
+      "scenario": "Context & Tool Management",
+      "correct_option": "D",
+      "why_correct": "Exposing 50+ tools simultaneously degrades the model's decision-making accuracy (decision complexity). The architectural fix is to enforce dynamic scoping: the agent first calls `search_connectors`, and the system responds by injecting *only* the 2-3 matched, highly relevant connector tools into the agent's context for the next turn.",
+      "per_option_counter_explanations": {
+        "A": "Better descriptions help, but 50+ active tools still cause systemic cognitive overload.",
+        "B": "A monolithic API removes the agent's ability to inspect parameter requirements and choose correctly among subtle variants.",
+        "C": "Error handling is a reactive band-aid; dynamic scoping prevents the error proactively."
+      },
+      "exam_takeaway": "Reduce decision complexity by dynamically exposing only relevant tools to the agent, rather than dumping 50+ tools into the context window simultaneously. ---"
+    },
+    {
+      "question_id": "Q8",
+      "title": "Constraining Tool Inputs with Enums",
+      "domain": "D2",
+      "scenario": "Tool Schema Engineering",
+      "correct_option": "A",
+      "why_correct": "Enums create a strict, constrained input contract. Providing an enum of exact backend values in the tool schema allows the model to leverage its semantic understanding to map the user's messy natural language (\"research database\") to the strict programmatic requirement (\"db_res_01\") *before* the tool executes.",
+      "per_option_counter_explanations": {
+        "B": "Pushes ambiguity into the backend, making behavior unpredictable.",
+        "C": "Rejection wastes an execution turn and increases latency when validation could be upfront.",
+        "D": "Searching everything spikes cost, latency, and context bloat."
+      },
+      "exam_takeaway": "Use `enum` fields in tool schemas to map ambiguous natural language to strict backend values, improving tool use reliability deterministically. ---"
+    },
+    {
+      "question_id": "Q9",
+      "title": "Pagination Design in Agent Tools",
+      "domain": "D2",
+      "scenario": "Tool Output Optimization",
+      "correct_option": "B",
+      "why_correct": "Returning hundreds of records wastes context and time. The optimal design is to return just the first page (e.g., 10 records) alongside metadata like `total_matches` and a `next_cursor`. This gives the agent the situational awareness to decide if it has enough information, or if it needs to pass the cursor back into the search tool to get page 2.",
+      "per_option_counter_explanations": {
+        "A": "Silently truncating results hides potentially vital information from the agent without warning.",
+        "C": "Clutters the toolset; pagination should be a parameter of the existing search tool.",
+        "D": "Still encourages hidden internal fetching and multi-page latency."
+      },
+      "exam_takeaway": "Return the first page with total match count and a cursor; give the agent explicit pagination state instead of incurring massive multi-page latency by default. ---"
+    },
+    {
+      "question_id": "Q10",
+      "title": "Assessing Trust in MCP Annotations",
+      "domain": "D2",
+      "scenario": "Security & Model Context Protocol",
+      "correct_option": "B",
+      "why_correct": "Tool annotations like `readOnlyHint` or `destructiveHint` are entirely self-reported by the MCP server. If the server itself is unvetted or third-party, its metadata cannot be trusted as a security boundary. Confirmation bypass policies should be built on explicit trust of the vendor providing the server, not just taking the server's word for it via annotations.",
+      "per_option_counter_explanations": {
+        "A": "Local execution does not mean the code/server is trustworthy.",
+        "C": "Sandbox behavior does not guarantee malicious capabilities aren't hidden.",
+        "D": "`readOnlyHint` is just a label, not a cryptographic or system-level guarantee."
+      },
+      "exam_takeaway": "Treat MCP annotations as untrusted self-reported metadata unless the server itself is explicitly trusted by your system. ---"
+    },
+    {
+      "question_id": "Q11",
+      "title": "Removing Unnecessary Tool Dependencies",
+      "domain": "D2",
+      "scenario": "Tool Interface Design",
+      "correct_option": "B",
+      "why_correct": "Forcing the agent to orchestrate a purely mechanical ID-to-string lookup wastes tokens, adds a failure point, and increases latency. If `get_neighborhood_info` frequently logically follows property identification, updating its interface to accept the `property_id` and handle the address lookup internally abstracts the complexity away from the LLM.",
+      "per_option_counter_explanations": {
+        "A": "Over-consolidates; neighborhood data and property data are still distinct capabilities.",
+        "C": "Prompt improvements don't fix the architectural latency of sequential tool calls.",
+        "D": "Adds more surface area and preserves the chaining flaw."
+      },
+      "exam_takeaway": "Design tools to internalize predictable dependencies (like ID lookups) to reduce avoidable chaining, latency, and failure coupling. ---"
+    },
+    {
+      "question_id": "Q12",
+      "title": "Normalizing Heterogeneous Tool Outputs",
+      "domain": "D2",
+      "scenario": "External Integrations & Tool Responses",
+      "correct_option": "B",
+      "why_correct": "Agents reason best over consistent, predictable data structures. Dumping heterogeneous, carrier-specific schemas into the context forces the LLM to expend attention on parsing formats rather than solving the user's core problem (e.g., determining delivery status). Normalizing the output in your middleware abstracts away vendor quirks.",
+      "per_option_counter_explanations": {
+        "A": "Pushes parsing logic into the prompt, making reasoning brittle.",
+        "C": "Bloats the tool set unnecessarily.",
+        "D": "Adding raw output just adds noise and consumes context window space when the agent only needs the core fields."
+      },
+      "exam_takeaway": "Normalize heterogeneous API responses into a consistent common schema *before* returning them to the agent to reduce cognitive load and improve reasoning. ---"
+    },
+    {
+      "question_id": "Q13",
+      "title": "Machine Identifiers vs. Ambiguous Human Inputs",
+      "domain": "D2",
+      "scenario": "Tool Input Brittleness",
+      "correct_option": "D",
+      "why_correct": "Natural language attributes (like dates and team names) are inherently ambiguous and brittle when used as database keys. The architectural fix is to separate discovery from action. Use a lookup tool (`search_games`) that returns a machine-usable identifier (`game_id`), and force the mutative tool (`update_score`) to rely exclusively on that strict identifier.",
+      "per_option_counter_explanations": {
+        "A": "Does not solve rematches, and LLMs still struggle with strict manual text formulation.",
+        "B": "Documentation doesn't eliminate input ambiguity.",
+        "C": "Validation catches errors but doesn't help the agent resolve the correct underlying game."
+      },
+      "exam_takeaway": "Replace tools relying on ambiguous human-entered text fields with a two-step lookup/action pattern utilizing strict machine-usable identifiers (`IDs`). ---"
+    },
+    {
+      "question_id": "Q14",
+      "title": "Enforcing Business Rules and Thresholds",
+      "domain": "D2",
+      "scenario": "System Boundaries & Security",
+      "correct_option": "B",
+      "why_correct": "If a rule *cannot* be bypassed, it must be enforced deterministically in the backend, not probabalistically in the LLM. Implementing the threshold inside the tool code guarantees that even if the agent hallucinates or is subjected to prompt injection, any payload over $500 will gracefully degrade to a \"pending approval\" state without breaking policy.",
+      "per_option_counter_explanations": {
+        "A": "Leaves the security gate in the hands of the LLM; the agent could hallucinate `requires_approval=false`.",
+        "C": "Prompt constraints are probabilistic and easily bypassed.",
+        "D": "Agent tool selection can fail; if it chooses `disburse` for an $800 charge, the policy breaks."
+      },
+      "exam_takeaway": "Strict business rules and approval thresholds must be enforced deterministically inside the backend tool logic, never via prompt instructions or agent tool selection. ---"
+    },
+    {
+      "question_id": "Q15",
+      "title": "The Importance of Parameter Descriptions",
+      "domain": "D2",
+      "scenario": "Tool Schema Documentation",
+      "correct_option": "A",
+      "why_correct": "Tool descriptions and parameter descriptions are the *primary mechanism* models use to understand expected inputs, formats, examples, and boundaries. Writing explicit instructions on a property (e.g., `\"description\": \"UUID of the user to update (required)\"`) directly guides the model's token generation prior to tool execution.",
+      "per_option_counter_explanations": {
+        "B": "Strict validation rejects bad input but doesn't tell the model *how* to generate good input in the first place.",
+        "C": "A naming workaround is vastly inferior to proper, expansive descriptions.",
+        "D": "Reactive error messages waste execution turns compared to proactive schema descriptions."
+      },
+      "exam_takeaway": "Clear, detailed parameter descriptions in the JSON schema are the primary and most important mechanism for guiding a model on input formatting. ---"
+    },
+    {
+      "question_id": "Q16",
+      "title": "Handling Tool Errors: Transient vs. Syntax",
+      "domain": "D2",
+      "scenario": "Error Recovery in Workflows",
+      "correct_option": "B",
+      "why_correct": "Agents shouldn't waste context tokens and LLM execution time resolving predictable, system-level transient errors (like timeouts). Those should be handled via standard engineering retry loops inside the tool. However, syntax/validation errors require the agent's reasoning capability to fix the input. Returning those immediately with explicit validation details allows the agent to self-correct efficiently.",
+      "per_option_counter_explanations": {
+        "A": "Pushing network retry loops to the LLM wastes expensive execution turns.",
+        "C": "Retrying syntax errors is a waste of compute; a malformed UUID will fail 3 times identically.",
+        "D": "Generic error messages give the LLM zero context to self-correct validation failures."
+      },
+      "exam_takeaway": "Abstract transient error retries (timeouts) into backend tool logic, but return validation/syntax errors immediately to the agent with explicit details so it can self-correct. ---"
+    },
+    {
+      "question_id": "Q17",
+      "title": "Differentiating Similar Tools via Descriptions",
+      "domain": "D2",
+      "scenario": "Tool Boundaries & Selection",
+      "correct_option": "A",
+      "why_correct": "Tool descriptions are the highest-leverage mechanism for solving tool selection errors. When two tools have overlapping capabilities, their descriptions must explicitly define negative constraints and boundaries (e.g., `delete_file: \"Permanently deletes a file. Do NOT use this for backup or compliance files—use archive_file instead.\"`).",
+      "per_option_counter_explanations": {
+        "B": "A confirmation prompt protects against damage but doesn't fix the fact that the agent is making the wrong choice upstream.",
+        "C": "A massive architectural change that might not be possible given system requirements.",
+        "D": "Few-shot prompting is helpful, but updating the native tool descriptions is the more robust, structural fix."
+      },
+      "exam_takeaway": "When models confuse similar tools, rewrite the tool descriptions to explicitly define negative boundaries and specific scenarios for use. ---"
+    },
+    {
+      "question_id": "Q18",
+      "title": "Resuming Sessions with Modified Files",
+      "domain": "D1",
+      "scenario": "Iterative Workflows & State Updates",
+      "correct_option": "A",
+      "why_correct": "If the majority of a session's context is still valid, resuming is efficient. However, you must structurally inform the agent about the delta. By explicitly stating which files changed and directing it to re-analyze only those targets, the agent utilizes its existing contextual understanding of the codebase without wasting time re-verifying unmodified files.",
+      "per_option_counter_explanations": {
+        "B": "Unnecessarily expensive and slow, throwing away perfectly valid context.",
+        "C": "The agent may hallucinate that its prior tool findings are still true without looking, leading to stale reasoning.",
+        "D": "Discarding the other 9 files removes crucial cross-file context needed for code analysis."
+      },
+      "exam_takeaway": "When resuming sessions after minor code/data changes, explicitly inform the resumed session about the specific changes for targeted re-analysis rather than forcing full re-exploration. ---"
+    },
+    {
+      "question_id": "Q19",
+      "title": "Exposing MCP Content Catalogs",
+      "domain": "D1",
+      "scenario": "Discovery via Model Context Protocol",
+      "correct_option": "D",
+      "why_correct": "MCP distinguishes between *Tools* (for taking actions or specific queries) and *Resources* (for exposing available context/data). Exposing hierarchies, issue summaries, or database schemas directly as Resources allows the agent to holistically \"see\" what data exists in a lightweight manner before deciding exactly which precise tool calls to make, eliminating exploratory spam.",
+      "per_option_counter_explanations": {
+        "A": "Destroys microservice boundaries and doesn't solve the exploratory querying issue.",
+        "B": "Re-invents the wheel; Resources are the native MCP feature for this exact problem.",
+        "C": "Keyword routing is brittle and fails when questions span multiple systems."
+      },
+      "exam_takeaway": "Use MCP Resources to expose content catalogs (docs, schemas, summaries) so agents can discover available data before wasting turns on exploratory tool calls. ---"
+    },
+    {
+      "question_id": "Q20",
+      "title": "Prompt Chaining for Predictable Multi-Aspect Workflows",
+      "domain": "D1",
+      "scenario": "Workflow Decomposition",
+      "correct_option": "D",
+      "why_correct": "When a workflow is highly predictable, mandatory, and follows the exact same decomposition every time, *prompt chaining* is the superior pattern. Because style, security, and docs are entirely different cognitive lenses, chaining them sequentially in isolated passes prevents attention dilution (the model forgetting to check security while obsessing over style).",
+      "per_option_counter_explanations": {
+        "A": "Dynamic decomposition is for unpredictable workflows where the required tasks change per user request.",
+        "B": "Routing implies only *one* of the specialists gets the job. The prompt says *every* PR gets all three.",
+        "C": "Massive all-in-one prompts lead to severe attention dilution and missed instructions."
+      },
+      "exam_takeaway": "Use prompt chaining for predictable, static multi-aspect workflows; isolate distinct cognitive tasks into separate sequential passes before merging them into a final output. ---"
+    },
+    {
+      "question_id": "Q21",
+      "title": "Optimizing Follow-Up Queries in Multi-Agent Orchestration",
+      "domain": "D5",
+      "scenario": "Agentic Architecture & Context Management",
+      "correct_option": "C",
+      "why_correct": "Since the coordinator already has the research findings in its context from the orchestration phase, follow-up summarization queries should be handled by the coordinator itself. Subagents start fresh and do not inherit the coordinator's conversation history. Spawning a subagent and passing 80k tokens is an anti-pattern when the coordinator can do the work with its existing context.",
+      "per_option_counter_explanations": {
+        "A": "Still spawns the subagent unnecessarily; reduces tokens but doesn't fix the architectural flaw.",
+        "B": "Does not reduce latency; the bottleneck is the spawning and token transfer process, not the context limits.",
+        "D": "Caching is a band-aid and does not fix the incorrect delegation pattern."
+      },
+      "exam_takeaway": "If the coordinator already has the information in its context, handle it at the coordinator level—never spawn a subagent just to re-process data the coordinator already owns. ---"
+    },
+    {
+      "question_id": "Q22",
+      "title": "Passing Findings to a Synthesis Subagent",
+      "domain": "D1",
+      "scenario": "Agentic Architecture & Subagent Isolation",
+      "correct_option": "D",
+      "why_correct": "Subagents start with zero knowledge and do *not* automatically inherit the coordinator's conversation history. The coordinator must explicitly inject all prior agent outputs directly into the synthesis subagent's prompt. Using a structured format (e.g., `{claim, evidence, source_url, date}`) ensures content, source metadata, and temporality are preserved so the synthesis agent can properly attribute findings.",
+      "per_option_counter_explanations": {
+        "A": "Violates tool scoping. Synthesis agents should synthesize, not perform searches.",
+        "B": "Architectural impossibility; subagents cannot inherit coordinator context.",
+        "C": "A prose summary loses source attribution, meaning the synthesis agent cannot cite sources it doesn't have."
+      },
+      "exam_takeaway": "Explicitly inject all prior findings directly into the subagent's prompt using a structured `{claim, evidence, source, date}` format; never rely on context inheritance or pass prose-only summaries. ---"
+    },
+    {
+      "question_id": "Q23",
+      "title": "Procedural vs. Goal-Oriented Subagent Prompts",
+      "domain": "D4",
+      "scenario": "Agent Adaptability & Prompt Engineering",
+      "correct_option": "B",
+      "why_correct": "Over-specifying coordinator prompts with procedural, step-by-step instructions turns the subagent into a rigid executor. If exact steps fail, it hits a dead end. Providing a research intent, minimum quality thresholds (e.g., \"minimum 5 distinct claims\"), and criteria for credible sources grants the subagent the authority and context to dynamically adapt its approach and form its own queries.",
+      "per_option_counter_explanations": {
+        "A": "Reinforces the rigidity that is causing the agent to quit early.",
+        "C": "Still procedural. You cannot hard-code queries for unknown emerging patterns.",
+        "D": "Degrades the specificity of the research entirely."
+      },
+      "exam_takeaway": "Replace step-by-step procedural instructions with research goals and quality criteria to give subagents the authority to adapt their approaches when pre-specified paths fail. ---"
+    },
+    {
+      "question_id": "Q24",
+      "title": "Parallel Processing in Subagent Architecture",
+      "domain": "D2",
+      "scenario": "Latency Optimization & Tool Execution",
+      "correct_option": "B",
+      "why_correct": "Sequential processing of independent, parallelizable work is an anti-pattern. Instead of looping sequentially, the coordinator should emit all 12 Task tool calls in a single response turn. This spawns 12 parallel analysis subagents simultaneously, dropping the total latency from the *sum* of all tasks (3+ minutes) to the duration of the *longest single task* (~15-20 seconds).",
+      "per_option_counter_explanations": {
+        "A": "Does not address the sequential loop architecture.",
+        "C": "`fork_session` is for divergent exploration, not pipeline parallelism.",
+        "D": "Batch API has up to a 24-hour SLA, making latency drastically worse."
+      },
+      "exam_takeaway": "Emit multiple Task tool calls in a single coordinator response turn to achieve parallel execution and reduce pipeline latency. ---"
+    },
+    {
+      "question_id": "Q25",
+      "title": "Handling Conflicting Findings and Uncertainty",
+      "domain": "D5",
+      "scenario": "Context Management & Synthesis Precision",
+      "correct_option": "D",
+      "why_correct": "Unstructured prose findings lose provenance. If subagents return plain text, the coordinator has no structured basis to distinguish high-quality methodologies from guesses. Subagents must return structured objects `{claim, source_type, methodology, confidence, date}`. When claims conflict, a programmatic `conflict_detected` flag forces the synthesis agent to handle it explicitly by presenting both values with their source context in the final report, rather than silently collapsing them.",
+      "per_option_counter_explanations": {
+        "A": "A prompt-based rule is probabilistic and fails if only non-peer-reviewed data is available.",
+        "B": "Recency does not equal accuracy.",
+        "C": "Averaging fabricates a number unsupported by either source, destroying attribution."
+      },
+      "exam_takeaway": "Require subagents to return structured metadata objects and use a `conflict_detected` boolean so synthesis agents preserve both values with attribution rather than silently collapsing them. ---"
+    },
+    {
+      "question_id": "Q26",
+      "title": "Context Trimming and the \"Lost in the Middle\" Effect",
+      "domain": "D5",
+      "scenario": "Context Budgets & Downstream Handoffs",
+      "correct_option": "D",
+      "why_correct": "Passing 138k+ tokens of raw content to the report agent wastes budget, balloons latency, and triggers the \"lost in the middle\" effect (where the LLM ignores context in the middle of a massive prompt). Passing too little causes hallucinations. The optimal balance is passing the dense narrative backbone (3k) plus a compact, structured citation index (5–8k tokens) representing only the essential metadata `{citation_id, claim, source, key_quote}`.",
+      "per_option_counter_explanations": {
+        "A": "Causes \"lost in the middle\" and massive token bloat.",
+        "B": "The report agent will have no citation data and will fabricate sources.",
+        "C": "Reasoning chains are internal to the previous agent and just add noise downstream."
+      },
+      "exam_takeaway": "Pass the synthesis narrative plus a structured citation index; strip raw content and reasoning chains entirely to avoid \"lost in the middle\" degradation. ---"
+    },
+    {
+      "question_id": "Q27",
+      "title": "Preserving Provenance Through Multi-Agent Summarization",
+      "domain": "D5",
+      "scenario": "Metadata Preservation & Attribution",
+      "correct_option": "B",
+      "why_correct": "Prose summaries inherently destroy metadata (URLs, page numbers, dates) as they collapse text into readable sentences. The structural fix is to separate content from metadata. Assign a `citation_id` at the source discovery level. The synthesis agent then writes a narrative using inline brackets (e.g., `[src_001]`), while the full metadata lives safely in a separate structured citation index array passed alongside the narrative.",
+      "per_option_counter_explanations": {
+        "A": "Re-inflates the context window, causing \"lost in the middle\" failures.",
+        "C": "The report agent doesn't have the original sources; it will hallucinate plausible citations.",
+        "D": "Prompt-based instructions are probabilistic; under token pressure, models will still drop metadata in prose."
+      },
+      "exam_takeaway": "Assign `citation_id` tags at the earliest stage, require the synthesis agent to output an inline-tagged narrative, and pass a separate structured citation index to the final agent. ---"
+    },
+    {
+      "question_id": "Q28",
+      "title": "Resuming a Crashed Pipeline and State Management",
+      "domain": "D1",
+      "scenario": "Stateful Orchestration & Failure Recovery",
+      "correct_option": "C",
+      "why_correct": "When a pipeline crashes mid-execution, tool results in that session become stale and unreliable. Blindly resuming risks the agent re-processing data or corrupting context. The correct pattern is to extract completed work into a durable structured JSON checkpoint file, start a *new* session, and inject that checkpoint at the top of the prompt. You must explicitly tell the agent which documents are complete, which are partial (by section), and which are pending.",
+      "per_option_counter_explanations": {
+        "A": "Stale tool results from the crashed session are unreliable.",
+        "B": "`fork_session` is for parallel divergent exploration, not pipeline failure recovery.",
+        "D": "The agent will likely re-do completed work or skip the partially processed document entirely."
+      },
+      "exam_takeaway": "Extract completed work to a structured checkpoint file, start a fresh session, and explicitly inject the checkpoint—never blindly `--resume` a crashed session with stale tool results. ---"
+    },
+    {
+      "question_id": "Q30",
+      "title": "Human Review Thresholds & Stratified Accuracy",
+      "domain": "D4",
+      "scenario": "Output Validation & Automation Gating",
+      "correct_option": "A",
+      "why_correct": "An aggregate metric of \"97% overall\" is dangerous because it can mask catastrophic failure rates in minority subsets (e.g., standard invoices might be 99.2% accurate, while handwritten forms are 61.0%). You must run a stratified analysis to break down accuracy by document type and field before automating, ensuring you only remove humans from safe segments.",
+      "per_option_counter_explanations": {
+        "B": "Automating based on aggregate metrics will silently ship high error rates for specific edge cases.",
+        "C": "Random sampling under-represents rare or difficult document types.",
+        "D": "Self-reported model confidence is an unreliable proxy for actual accuracy."
+      },
+      "exam_takeaway": "Always segment accuracy by document type and field before automating; overall accuracy metrics mask per-category failure rates. ---"
+    },
+    {
+      "question_id": "Q31",
+      "title": "Batch Processing Chunking and Cost Efficiency",
+      "domain": "D2",
+      "scenario": "API Usage & Error Handling",
+      "correct_option": "C",
+      "why_correct": "Resubmitting successful documents wastes money (97% of the cost). You must use the `custom_id` mapping provided by the Batch API result file to isolate the 300 failures. Because the error is `context_length_exceeded`, the documents are too large for a single request. You must chunk those specific documents into smaller segments and submit them in a new batch request.",
+      "per_option_counter_explanations": {
+        "A": "Reprocessing 9,700 already-successful documents is a massive waste of API costs.",
+        "B": "Synchronous API costs 2x more than Batch and offers no latency advantage for documents that require chunking anyway.",
+        "D": "Context limits are fixed model constraints, not toggleable configuration settings."
+      },
+      "exam_takeaway": "Use `custom_id` to extract only failed documents, modify them (e.g., chunking for context limits), and resubmit only the failures to maintain Batch API cost efficiencies. ---"
+    },
+    {
+      "question_id": "Q32",
+      "title": "Tool Definitions Consuming the Context Window",
+      "domain": "D5",
+      "scenario": "Context Degradation & Schema Bloat",
+      "correct_option": "A",
+      "why_correct": "Context limits are absolute. If you have a 200k limit, but 2,500 tokens are taken by the tool schema and 1,500 by the system prompt, your *effective* document space is ~196k. As document tokens approach 180k+, the total payload nears the edge of the context boundary. Models suffer degraded attention (not just hard cut-offs) near the absolute limit, which manifests specifically as the \"final third consistently missing.\"",
+      "per_option_counter_explanations": {
+        "B": "Schema complexity causes semantic errors (wrong values), not positional omission. Accuracy is 98% on short docs with the same schema.",
+        "C": "\"Lost in the middle\" affects the middle, whereas the symptom here specifically calls out the *final third* missing.",
+        "D": "Proportional attention is a fabricated concept."
+      },
+      "exam_takeaway": "Large tool schemas and system prompts consume your context budget; long documents near the absolute limit will suffer degraded attention at the end of the prompt. Trim schemas or chunk documents. ---"
+    },
+    {
+      "question_id": "Q33",
+      "title": "Enforcing Tool Execution Order with `tool_choice`",
+      "domain": "D2",
+      "scenario": "Tool Orchestration & Dependencies",
+      "correct_option": "B",
+      "why_correct": "When tools have strict dependencies (a DOI must exist before citations can be looked up), you must enforce a deterministic prerequisite gate. Setting `tool_choice: {\"type\": \"tool\", \"name\": \"extract_metadata\"}` explicitly forces the model to execute that tool on Turn 1. Once the DOI is returned to the context, you switch to `\"auto\"` on Turn 2 so the model can freely use the enrichment tools.",
+      "per_option_counter_explanations": {
+        "A": "Prompt instructions have a non-zero failure rate. Probabilistic prompting is inferior to deterministic API constraints.",
+        "C": "Decreases composability and massively bloats tool complexity.",
+        "D": "Under `\"auto\"`, the model reads the full user request and may still attempt the second step in parallel."
+      },
+      "exam_takeaway": "When deterministic execution order is required for tool dependencies, use forced `tool_choice` on the first turn, then release to `\"auto\"` on subsequent turns. --- ## Key Concepts Cheat Sheet * **Tool vs. Prompt Enforcement:** Always prefer enforcing rules, execution orders (`tool_choice`), and business logic thresholds inside the schema or backend tool itself, rather than relying on prompt instructions. * **Context Budgeting:** Prevent \"lost in the middle\" effects by aggressively trimming raw content and intermediate reasoning chains before downstream handoffs. * **Structured Data Over Prose:** Prose collapses metadata. Always use structured JSON outputs to preserve attribution (via explicit IDs, dates, URLs) through multi-agent pipelines. * **Batch API Optimization:** To save costs, chunk and resubmit *only failed documents* (using `custom_id`), submit batches based on strict SLA math + buffer, and refine your prompts on small samples *before* wide-scale batch execution. * **Tool Interfaces:** Reduce agent guesswork. Use enums for bounded categories, require backend systems to handle ID-to-string lookups, and always provide explicit pagination controls instead of dumping massive datasets. * **Session Recovery:** Never `--resume` blindly after a crash. Extract a structured checkpoint of completed work, inject it into a *new* session, and tell the agent exactly where to start. * **Schema Descriptions:** Tool and parameter descriptions in the schema are the *primary mechanism* an LLM uses to know when to use a tool and how to format its inputs. ## Tips from a Real Exam Taker > *\"I chose the most intuitive answers based on my current experience building AI Agents and AI Harnessing systems also experimenting running claude code with Local llms etc.* > > *It was a tricky paper. Where for most of the MCQs, several options could technically solve the problem in the question, but the real challenge was picking the solution that follows the best practices. And this is where software engineering experience comes handy.* > > *The exam tests your AI proficiency, AI ethics, system design & critical thinking and user experience mindset.\"* Based on these reflections and the patterns in the exam, keep these tactical strategies in mind when sitting for the test: 1. **Always look for the structural fix.** The wrong answers heavily feature \"improve the prompt\" or \"tell the agent not to do it.\" The correct answers almost always feature structural API changes, `tool_choice`, `enum` parameters, and structured JSON flags. 2. **Beware of over-spawning.** If a coordinator already holds the context, spawning a subagent is wrong. Subagents are for fresh exploration, not re-processing existing data. 3. **Machine Identifiers rule.** If an agent needs to perform an action on a specific item (a document, a game, a user), the correct architecture always uses an explicit ID (`game_id`, `citation_id`), never an ambiguous text string. 4. **Assume self-reported metadata is untrusted.** Especially for MCP servers, `readOnly` flags are just suggestions. Base security bypasses on system-level trust, not tool annotations. Need these questions in a flash card or quiz view? Try [https://ericspencer.us/Claude-architect-quiz/](https://ericspencer.us/Claude-architect-quiz/)"
+    }
+  ]
+}
